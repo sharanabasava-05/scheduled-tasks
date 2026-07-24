@@ -1,6 +1,4 @@
-import requests
 import os
-from twilio.rest import Client
 
 APIKEY = os.environ.get("APIKEY")
 phone_num = os.environ.get('phone_num')
