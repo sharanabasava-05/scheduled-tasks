@@ -1,40 +1,32 @@
-import csv
-import datetime as dt
-import random
-import smtplib
+import os
+
+APIKEY = os.environ.get("APIKEY")
+phone_num = os.environ.get('phone_num')
+OWM_endpoint = "https://api.openweathermap.org/data/2.5/forecast"
+account_sid = os.environ.get('account_sid')
+auth_token = os.environ.get('auth_token')
+parm={
+     "lat":15.139393,
+    "lon": 76.921440,
+    "appid":APIKEY,
+    "cnt":4
+}
+respone = requests.get(OWM_endpoint,params=parm)
+respone.raise_for_status()
+weather_data = respone.json()
+weather_data_list=[]
 
 
+will_rain = False
+for i in range(len(weather_data["list"])):
+    condition_code = weather_data["list"][i]["weather"][0]["id"]
+    if condition_code < 700:
+        will_rain = True
+if will_rain:
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+        from_='whatsapp:+14155238886',
+        body = "It's going to rain today. Remember to take an umbrella☂️",
+        to = phone_num
+    )
 
-place_holder="[NAME]"
-# 2. Check if today matches a birthday in the birthdays.csv
-with open("birthdays.csv","r") as f:
-    csv_dict=csv.DictReader(f)
-    # print(csv_dict)
-    birthday_dict = {}
-    for birth_dict in csv_dict:
-       birthday_dict[(int(birth_dict["day"]),int(birth_dict["month"]))]=birth_dict["name"]
-
-#Then you could compare and see if today's month/day matches one of the keys in birthday_dict like this:
-today=dt.datetime.now().date().day
-month=dt.datetime.now().date().month
-random_file=random.randint(1,3)
-
-# 4. Send the letter generated in step 3 to that person's email address.
-# HINT: Gmail(smtp.gmail.com), Yahoo(smtp.mail.yahoo.com), Hotmail(smtp.live.com), Outlook(smtp-mail.outlook.com)
-def letter_generator(text):
-    my_email=os.environ.get("my_email")
-    password=os.environ.get("password")
-
-    with smtplib.SMTP(host="smtp.gmail.com") as connection:
-        connection.starttls()
-        connection.login(user=my_email, password=password)
-        connection.sendmail(from_addr=my_email,
-                            to_addrs="sharanabasavabasava841@gmail.com",
-                            msg=f"subject:Birthaday whishes\n\n{text}")
-        connection.close()
-
-if (today,month) in birthday_dict:
-    with open(f"letter_templates/letter_{random_file}.txt","r") as f:
-        content=f.read()
-        final_content=content.replace(place_holder,birthday_dict[(today,month)])
-        letter_generator(final_content)
